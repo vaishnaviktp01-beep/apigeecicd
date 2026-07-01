@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example.apigee</groupId>
+    <artifactId>apigee-proxy-api</artifactId>
+    <version>1.0.0</version>
+    <packaging>apigee</packaging>
+
+    <name>Apigee Proxy API</name>
+    <description>Apigee Proxy API Deployment via Maven</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        
+        <!-- Apigee Configuration -->
+        <org>${org}</org>
+        <env>${env}</env>
+        <apigee.hosturl>${apigee.hosturl}</apigee.hosturl>
+        <apigee.username>${apigee.username}</apigee.username>
+        <apigee.password>${apigee.password}</apigee.password>
+        
+        <!-- Proxy Configuration -->
+        <proxy.name>apigee-proxy-api</proxy.name>
+        <proxy.basepath>/api/v1</proxy.basepath>
+        <target.name>backend</target.name>
+        
+        <!-- Plugin Versions -->
+        <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <maven.surefire.plugin.version>3.0.0</maven.surefire.plugin.version>
+        <maven.failsafe.plugin.version>3.0.0</maven.failsafe.plugin.version>
+        <apigee.maven.plugin.version>2.3.5</apigee.maven.plugin.version>
+        <maven.assembly.plugin.version>3.6.0</maven.assembly.plugin.version>
+        <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
+    </properties>
+
+    <!-- Dependencies -->
+    <dependencies>
+        <!-- Testing Dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.1.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.apigee.edge</groupId>
+            <artifactId>apigee-core</artifactId>
+            <version>2.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- REST Assured for Integration Tests -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>5.3.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JSON Processing -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.11</version>
+        </dependency>
+    </dependencies>
+
+    <!-- Build Configuration -->
+    <build>
+        <plugins>
+            <!-- Maven Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Resources Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven.resources.plugin.version}</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Surefire Plugin for Unit Tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*IntegrationTest.java</exclude>
+                        <exclude>**/*SmokeTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Failsafe Plugin for Integration Tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${maven.failsafe.plugin.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*IntegrationTest.java</include>
+                        <include>**/*SmokeTest.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Apigee Maven Plugin -->
+            <plugin>
+                <groupId>com.apigee.edge</groupId>
+                <artifactId>apigee-maven-plugin</artifactId>
+                <version>${apigee.maven.plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <org>${org}</org>
+                    <env>${env}</env>
+                    <username>${apigee.username}</username>
+                    <password>${apigee.password}</password>
+                    <hosturl>${apigee.hosturl}</hosturl>
+                    <apiversion>v1</apiversion>
+                    <options>update</options>
+                    <tokenUrl>${apigee.tokenurl}</tokenUrl>
+                    <mfaToken>${apigee.mfatoken}</mfaToken>
+                    <!-- Proxy Configuration -->
+                    <proxyName>${proxy.name}</proxyName>
+                    <!-- Bundle Configuration -->
+                    <bundleBasePath>target/apigee</bundleBasePath>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Assembly Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven.assembly.plugin.version}</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/bundle.xml</descriptor>
+                    </descriptors>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Clean Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>target</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <!-- Plugin Management -->
+        <pluginManagement>
+            <plugins>
+                <!-- JAR Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+
+                <!-- Source Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+
+                <!-- Javadoc Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <!-- Profiles for Different Environments -->
+    <profiles>
+        <!-- Eval Environment Profile -->
+        <profile>
+            <id>eval</id>
+            <properties>
+                <env>eval</env>
+                <apigee.hosturl>https://api.enterprise.apigee.com</apigee.hosturl>
+            </properties>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>eval</value>
+                </property>
+            </activation>
+        </profile>
+
+        <!-- Staging Environment Profile -->
+        <profile>
+            <id>staging</id>
+            <properties>
+                <env>staging</env>
+                <apigee.hosturl>https://api.enterprise.apigee.com</apigee.hosturl>
+            </properties>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>staging</value>
+                </property>
+            </activation>
+        </profile>
+
+        <!-- Production Environment Profile -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <env>prod</env>
+                <apigee.hosturl>https://api.enterprise.apigee.com</apigee.hosturl>
+            </properties>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>prod</value>
+                </property>
+            </activation>
+        </profile>
+
+        <!-- Development Profile -->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <env>dev</env>
+                <apigee.hosturl>https://api.enterprise.apigee.com</apigee.hosturl>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+    </profiles>
+
+    <!-- Repository Configuration -->
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Central Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <layout>default</layout>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
+            <id>apigee-release</id>
+            <name>Apigee Release Repository</name>
+            <url>https://maven.pkg.github.com/apigee/apigee-maven-plugins</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <!-- Plugin Repository Configuration -->
+    <pluginRepositories>
+        <pluginRepository>
+            <id>apigee-release</id>
+            <name>Apigee Release Repository</name>
+            <url>https://maven.pkg.github.com/apigee/apigee-maven-plugins</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>
