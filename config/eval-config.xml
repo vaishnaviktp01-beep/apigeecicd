@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Eval Environment Configuration
+  This file contains environment-specific configuration for the eval environment
+-->
+<configuration>
+    <!-- Environment Information -->
+    <environment>
+        <name>eval</name>
+        <description>Evaluation environment for testing proxy deployments</description>
+        <tier>evaluation</tier>
+    </environment>
+
+    <!-- API Target Configuration -->
+    <target>
+        <backend>
+            <url>https://backend-eval.example.com</url>
+            <timeout>30000</timeout>
+            <retries>2</retries>
+            <connectionTimeout>10000</connectionTimeout>
+            <socketTimeout>30000</socketTimeout>
+        </backend>
+    </target>
+
+    <!-- Authentication Configuration -->
+    <authentication>
+        <oauth>
+            <enabled>false</enabled>
+            <tokenUrl>https://auth-eval.example.com/oauth/token</tokenUrl>
+            <scopes>
+                <scope>read</scope>
+                <scope>write</scope>
+            </scopes>
+        </oauth>
+        <apiKey>
+            <enabled>true</enabled>
+            <headerName>X-API-Key</headerName>
+            <location>header</location>
+        </apiKey>
+    </authentication>
+
+    <!-- Rate Limiting Configuration -->
+    <rateLimit>
+        <enabled>true</enabled>
+        <requestsPerSecond>100</requestsPerSecond>
+        <burstSize>50</burstSize>
+        <quotaInterval>1</quotaInterval>
+        <quotaTimeUnit>minute</quotaTimeUnit>
+    </rateLimit>
+
+    <!-- Cache Configuration -->
+    <cache>
+        <enabled>true</enabled>
+        <ttl>3600</ttl>
+        <cacheLocation>memory</cacheLocation>
+        <maxSize>1000</maxSize>
+        <policies>
+            <policy>
+                <name>cache-get</name>
+                <enabled>true</enabled>
+            </policy>
+            <policy>
+                <name>cache-put</name>
+                <enabled>true</enabled>
+            </policy>
+        </policies>
+    </cache>
+
+    <!-- CORS Configuration -->
+    <cors>
+        <enabled>true</enabled>
+        <allowedOrigins>
+            <origin>*</origin>
+        </allowedOrigins>
+        <allowedMethods>
+            <method>GET</method>
+            <method>POST</method>
+            <method>PUT</method>
+            <method>DELETE</method>
+            <method>OPTIONS</method>
+        </allowedMethods>
+        <allowedHeaders>
+            <header>*</header>
+        </allowedHeaders>
+        <exposedHeaders>
+            <header>X-Total-Count</header>
+            <header>X-Page-Number</header>
+        </exposedHeaders>
+        <maxAge>3600</maxAge>
+        <allowCredentials>false</allowCredentials>
+    </cors>
+
+    <!-- Security Configuration -->
+    <security>
+        <ssl>
+            <enabled>true</enabled>
+            <minVersion>TLSv1.2</minVersion>
+            <maxVersion>TLSv1.3</maxVersion>
+            <cipherSuites>
+                <suite>TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384</suite>
+                <suite>TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</suite>
+            </cipherSuites>
+        </ssl>
+        <headers>
+            <securityHeadersEnabled>true</securityHeadersEnabled>
+            <strictTransportSecurity>max-age=31536000; includeSubDomains</strictTransportSecurity>
+            <xFrameOptions>DENY</xFrameOptions>
+            <xContentTypeOptions>nosniff</xContentTypeOptions>
+            <xXssProtection>1; mode=block</xXssProtection>
+            <contentSecurityPolicy>default-src 'self'</contentSecurityPolicy>
+        </headers>
+    </security>
+
+    <!-- Logging Configuration -->
+    <logging>
+        <level>INFO</level>
+        <format>JSON</format>
+        <syslog>
+            <enabled>false</enabled>
+            <host>syslog-eval.example.com</host>
+            <port>514</port>
+        </syslog>
+        <files>
+            <maxSize>100MB</maxSize>
+            <maxBackups>5</maxBackups>
+            <compressionEnabled>true</compressionEnabled>
+        </files>
+    </logging>
+
+    <!-- Monitoring and Alerting -->
+    <monitoring>
+        <enabled>true</enabled>
+        <metricsEnabled>true</metrics>
+        <healthCheckInterval>60</healthCheckInterval>
+        <alerting>
+            <enabled>true</enabled>
+            <errorThreshold>10</errorThreshold>
+            <responseTimeThreshold>5000</responseTimeThreshold>
+        </alerting>
+    </monitoring>
+
+    <!-- Policy Configuration -->
+    <policies>
+        <policy>
+            <name>validate-request</name>
+            <enabled>true</enabled>
+            <config>
+                <validateHeaders>true</validateHeaders>
+                <validatePayload>true</validatePayload>
+            </config>
+        </policy>
+        <policy>
+            <name>transform-request</name>
+            <enabled>true</enabled>
+            <config>
+                <jsonToXml>false</jsonToXml>
+                <xmlToJson>false</xmlToJson>
+            </config>
+        </policy>
+        <policy>
+            <name>rate-limit</name>
+            <enabled>true</enabled>
+            <config>
+                <quotaLimit>1000</quotaLimit>
+                <quotaInterval>1</quotaInterval>
+            </config>
+        </policy>
+    </policies>
+
+    <!-- Conditional Flows -->
+    <conditionalFlows>
+        <flow>
+            <name>error-handling</name>
+            <enabled>true</enabled>
+            <condition>fault == true</condition>
+            <actions>
+                <action>format-error-response</action>
+                <action>send-error-notification</action>
+            </actions>
+        </flow>
+    </conditionalFlows>
+
+    <!-- Custom Variables -->
+    <variables>
+        <variable>
+            <name>environment</name>
+            <value>eval</value>
+        </variable>
+        <variable>
+            <name>api.version</name>
+            <value>1.0</value>
+        </variable>
+        <variable>
+            <name>deployment.timestamp</name>
+            <value>${deployment.timestamp}</value>
+        </variable>
+    </variables>
+
+</configuration>

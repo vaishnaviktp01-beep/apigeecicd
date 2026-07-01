@@ -1,0 +1,133 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# Build output
+build/
+dist/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Logs
+*.log
+logs/
+.gradle/
+
+# OS Files
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Credentials and Secrets
+secrets/
+*.key
+*.pem
+*.p8
+*.pfx
+*.p12
+.credentials/
+apiproxy-credentials.json
+
+# Node (if using Node-based tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Test coverage
+coverage/
+.coverage
+.nyc_output/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Git
+.git/
+.gitconfig
+
+# Miscellaneous
+*.orig
+*.patch
+.venv/
+venv/
+env/
+
+# IntelliJ specific files/directories
+out/
+.idea_modules/
+*.iml
+*.iws
+*.ipr
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+Egg-info/
+.eggs/
+
+# Deployment logs
+deployment.log
+deploy-*.log
+
+# Build artifacts
+*.apigee
+*.bundle
