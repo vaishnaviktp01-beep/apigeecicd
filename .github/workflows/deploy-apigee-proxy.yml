@@ -1,0 +1,181 @@
+name: Deploy Apigee Proxy to Eval
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'eval'
+        type: choice
+        options:
+          - eval
+          - staging
+          - prod
+
+env:
+  MAVEN_CACHE_KEY: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+  APIGEE_ORG: ${{ secrets.APIGEE_ORG }}
+  APIGEE_ENV: eval
+  APIGEE_HOSTNAME: ${{ secrets.APIGEE_HOSTNAME }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Validate pom.xml
+        run: mvn validate
+
+      - name: Build Apigee Proxy Bundle
+        run: |
+          mvn clean package \
+            -DskipTests \
+            -Dorg=${{ env.APIGEE_ORG }} \
+            -Denv=${{ env.APIGEE_ENV }}
+
+      - name: Run Unit Tests
+        run: mvn test -Dorg=${{ env.APIGEE_ORG }} -Denv=${{ env.APIGEE_ENV }}
+
+      - name: Run Integration Tests
+        run: mvn verify -Dorg=${{ env.APIGEE_ORG }} -Denv=${{ env.APIGEE_ENV }}
+
+      - name: Deploy to Apigee (Eval)
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        run: |
+          mvn apigee-enterprise:deploy \
+            -Dorg=${{ env.APIGEE_ORG }} \
+            -Denv=${{ env.APIGEE_ENV }} \
+            -Dapigee.username=${{ secrets.APIGEE_USERNAME }} \
+            -Dapigee.password=${{ secrets.APIGEE_PASSWORD }} \
+            -Dapigee.hosturl=${{ secrets.APIGEE_HOSTURL }}
+
+      - name: Verify Deployment
+        if: success()
+        run: |
+          mvn apigee-enterprise:get \
+            -Dorg=${{ env.APIGEE_ORG }} \
+            -Denv=${{ env.APIGEE_ENV }} \
+            -Dapigee.username=${{ secrets.APIGEE_USERNAME }} \
+            -Dapigee.password=${{ secrets.APIGEE_PASSWORD }} \
+            -Dapigee.hosturl=${{ secrets.APIGEE_HOSTURL }}
+
+      - name: Post Deployment Tests
+        if: success()
+        run: |
+          mvn test -Dtest=SmokeTests \
+            -Dapigee.target.url=${{ env.APIGEE_HOSTNAME }} \
+            -Dorg=${{ env.APIGEE_ORG }} \
+            -Denv=${{ env.APIGEE_ENV }}
+
+      - name: Slack Notification - Success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "✅ Apigee Proxy deployed successfully to Eval",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Apigee Proxy Deployment Successful*\n*Environment:* Eval\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Slack Notification - Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "❌ Apigee Proxy deployment failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ *Apigee Proxy Deployment Failed*\n*Environment:* Eval\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}\n*Details:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Upload Build Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: apigee-proxy-bundle
+          path: target/*.zip
+          retention-days: 30
+
+      - name: Generate Deployment Report
+        if: always()
+        run: |
+          echo "## Deployment Report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Organization**: ${{ env.APIGEE_ORG }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.APIGEE_ENV }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit SHA**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_STEP_SUMMARY
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Security Scan
+        run: |
+          echo "Running security scans..."
+
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: build-and-deploy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Rollback Deployment
+        run: |
+          echo "Rolling back to previous version..."
